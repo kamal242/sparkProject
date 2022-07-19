@@ -226,11 +226,27 @@ ordDf = spark.read.load(data_ord_path, format ='csv',sep=',',schema =('order_id 
 # df1.join(df2,df1.empid == df2.empid,'inner').select(df1.empid,df2.country).show()
 
 #****MultiColumn Join*********
-df1 = spark.createDataFrame(data=((1,101,'Robert'),(2,102,'Ria'),(3,103,'James')),schema='empid int,deptid int,empname string')
-df2 = spark.createDataFrame(data=((2,102,'USA'),(4,104,'India')),schema='empid int,deptid int,country string')
-df1.show()
-df2.show()
+# df1 = spark.createDataFrame(data=((1,101,'Robert'),(2,102,'Ria'),(3,103,'James')),schema='empid int,deptid int,empname string')
+# df2 = spark.createDataFrame(data=((2,102,'USA'),(4,104,'India')),schema='empid int,deptid int,country string')
+# df1.show()
+# df2.show()
+#
+# df1.join(df2,(df1.empid == df2.empid) & (df1.deptid == df2.deptid)).show()
 
-df1.join(df2,(df1.empid == df2.empid) & (df1.deptid == df2.deptid)).show()
+#********groupBy()******
+data = (("James","Sales","NY",9000,34),
+("Alicia","Sales","NY",8600,56),
+("Robert","Sales","CA",8100,30),
+("Lisa","Finance","CA",9000,24),
+("Deja","Finance","CA",9900,40),
+("Sugie","Finance","NY",8300,36),
+("Ram","Finance","NY",7900,53),
+("Kyle","Marketing","CA",8000,25),
+("Reid","Marketing","NY",9100,50)
+)
+
+schema=("empname","dept","state","salary","age")
+df  = spark.createDataFrame(data,schema)
+df.show()
 
 
