@@ -1,6 +1,10 @@
 from pyspark.sql import SparkSession
+from pyspark.sql.functions import window
 from pyspark import SparkContext
-from pyspark.sql.functions import substring
+from pyspark.sql.functions import substring, col
+from pyspark.sql.functions import *
+from pyspark.sql.window import *
+from pyspark.sql import functions as F
 
 spark = SparkSession.builder.appName("Map").getOrCreate()
 data_ord_path = ("C:\\Users\\Kamal Nayan\\Documents\\Orders\\part-00000")
@@ -234,19 +238,60 @@ ordDf = spark.read.load(data_ord_path, format ='csv',sep=',',schema =('order_id 
 # df1.join(df2,(df1.empid == df2.empid) & (df1.deptid == df2.deptid)).show()
 
 #********groupBy()******
+# data = (("James","Sales","NY",9000,34),
+# ("Alicia","Sales","NY",8600,56),
+# ("Robert","Sales","CA",8100,30),
+# ("Lisa","Finance","CA",9000,24),
+# ("Deja","Finance","CA",9900,40),
+# ("Sugie","Finance","NY",8300,36),
+# ("Ram","Finance","NY",7900,53),
+# ("Kyle","Marketing","CA",8000,25),
+# ("Reid","Marketing","NY",9100,50)
+# )
+
 data = (("James","Sales","NY",9000,34),
 ("Alicia","Sales","NY",8600,56),
 ("Robert","Sales","CA",8100,30),
+("John","Sales","AZ",8600,31),
+("Ross","Sales","AZ",8100,33),
+("Kathy","Sales","AZ",1000,39),
 ("Lisa","Finance","CA",9000,24),
 ("Deja","Finance","CA",9900,40),
 ("Sugie","Finance","NY",8300,36),
 ("Ram","Finance","NY",7900,53),
+("Satya","Finance","AZ",8200,53),
 ("Kyle","Marketing","CA",8000,25),
 ("Reid","Marketing","NY",9100,50)
 )
 
 schema=("empname","dept","state","salary","age")
 df  = spark.createDataFrame(data,schema)
-df.show()
+# df.show()
 
+
+# df.groupBdfy(.dept,df.state).min("salary","age").show()
+
+# df.where(df.state == 'NY').groupBy(df.dept).agg(min("salary").alias("min_salary")).show()
+
+# df.select("dept","state","salary").show()
+# df_t = df.groupBy(df.dept).pivot("state").sum("salary")
+# df_t.show()
+
+spec = Window.partitionBy("dept").orderBy("salary")
+
+# df.select(df.dept,df.salary).withColumn("rank",rank().over(spec))\
+#     .withColumn("row_number",row_number().over(spec))\
+#     .withColumn("dense_rank",dense_rank().over(spec))\
+#     .show()
+
+##****Analytical Window function*********
+#Return offset one less than the current
+#Return offset one more than the current
+#Custom Program to check if prev salary is greater than prev salary
+df1 = df.select(df.dept,df.salary)\
+    .withColumn("lag_prev_salary",F.lag("salary",1,0).over(spec))
+
+df3= df1.withColumn("diff",F.when((df1.salary >= df1.lag_prev_salary) ,"True")\
+                                .otherwise("False"))
+df3.show()
 
