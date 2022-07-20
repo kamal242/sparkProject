@@ -1,10 +1,6 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import window
-from pyspark import SparkContext
-from pyspark.sql.functions import substring, col
 from pyspark.sql.functions import *
 from pyspark.sql.window import *
-from pyspark.sql import functions as F
 
 spark = SparkSession.builder.appName("Map").getOrCreate()
 data_ord_path = ("C:\\Users\\Kamal Nayan\\Documents\\Orders\\part-00000")
@@ -237,6 +233,7 @@ ordDf = spark.read.load(data_ord_path, format ='csv',sep=',',schema =('order_id 
 #
 # df1.join(df2,(df1.empid == df2.empid) & (df1.deptid == df2.deptid)).show()
 
+####________________________________________19-07-2022____________________
 #********groupBy()******
 # data = (("James","Sales","NY",9000,34),
 # ("Alicia","Sales","NY",8600,56),
@@ -287,11 +284,27 @@ spec = Window.partitionBy("dept").orderBy("salary")
 ##****Analytical Window function*********
 #Return offset one less than the current
 #Return offset one more than the current
-#Custom Program to check if prev salary is greater than prev salary
+#Custom Program to check if prev salary is greater than prev salary prints True or False
+# df1 = df.select(df.dept,df.salary)\
+#     .withColumn("lag_prev_salary",F.lag("salary",1,0).over(spec))
+#
+# df3= df1.withColumn("diff",F.when((df1.salary >= df1.lag_prev_salary) ,"True")\
+#                                 .otherwise("False"))
+# df3.show()
+
+
+##*************************20-07-2022************************
+
+###Encryption
+import pyspark.sql.types
+# df.select((df.empname),df.dept,df.state,md5((df.salary).cast("string")),df.age).show()
+
+###Window Function
+spec = Window.partitionBy("dept").orderBy("salary")
+
+##Find out the first salary
 df1 = df.select(df.dept,df.salary)\
-    .withColumn("lag_prev_salary",F.lag("salary",1,0).over(spec))
+    .withColumn("first_salary",first("salary").over(spec)).show()
 
-df3= df1.withColumn("diff",F.when((df1.salary >= df1.lag_prev_salary) ,"True")\
-                                .otherwise("False"))
-df3.show()
-
+##GroupBy API
+df2 = df1.select(df1.dept,df1.salary).groupBy(df1.dept).avg().show()
